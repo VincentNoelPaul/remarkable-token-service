@@ -32,7 +32,8 @@ def home():
     </html>
     """
 
-# Token endpoint (the missing piece)
+import uuid
+
 @app.route("/token", methods=["POST"])
 @app.route("/token/", methods=["POST"])
 def token():
@@ -44,12 +45,18 @@ def token():
 
     payload = {
         "code": code,
-        "deviceDesc": "mobile-browser",
-        "deviceID": "mydeviceid123"
+        "deviceDesc": "desktop-windows",
+        "deviceID": str(uuid.uuid4())
     }
 
-    resp = requests.post(RM_URL, json=payload)
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    }
+
+    resp = requests.post(RM_URL, json=payload, headers=headers)
     return resp.text, resp.status_code
+
 
 # Health check
 @app.get("/health")
