@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import requests
+import uuid
 
 app = Flask(__name__)
 
@@ -32,8 +33,6 @@ def home():
     </html>
     """
 
-import uuid
-
 @app.route("/token", methods=["POST"])
 @app.route("/token/", methods=["POST"])
 def token():
@@ -54,11 +53,18 @@ def token():
         "Content-Type": "application/json"
     }
 
-    resp = requests.post(RM_URL, json=payload, headers=headers)
-    return resp.text, resp.status_code
+    try:
+        resp = requests.post(RM_URL, json=payload, headers=headers, timeout=10)
+        return resp.text, resp.status_code
+    except requests.RequestException as e:
+        return jsonify({"error": f"Failed to reach reMarkable API: {e}"}), 502
 
 
 # Health check
 @app.get("/health")
 def health():
     return "OK", 200
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
