@@ -55,9 +55,18 @@ def token():
 
     try:
         resp = requests.post(RM_URL, json=payload, headers=headers, timeout=10)
-        return resp.text, resp.status_code
     except requests.RequestException as e:
         return jsonify({"error": f"Failed to reach reMarkable API: {e}"}), 502
+
+    if resp.ok:
+        return resp.text, resp.status_code
+
+    # The API returns HTML error pages on failure — return a clean JSON error instead
+    try:
+        error_body = resp.json()
+    except (ValueError, requests.exceptions.JSONDecodeError):
+        error_body = {"error": f"reMarkable API returned status {resp.status_code}"}
+    return jsonify(error_body), resp.status_code
 
 
 # Health check
